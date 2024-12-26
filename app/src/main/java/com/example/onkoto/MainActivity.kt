@@ -11,6 +11,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.onkoto.model.UserDto
 import com.example.onkoto.service.UserService
 
+/* root class */
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,6 +22,7 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
 
 
         val button: Button = findViewById(R.id.buttonSubmit)
