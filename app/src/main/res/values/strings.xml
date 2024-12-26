@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Onkoto</string>
+    <string name="label_login">Login</string>
+    <string name="label_name">Name</string>
+    <string name="label_send">Save</string>
+    <string name="label_title">Welcome!</string>
+</resources>
