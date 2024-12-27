@@ -4,4 +4,7 @@
     <string name="label_name">Name</string>
     <string name="label_send">Save</string>
     <string name="label_title">Welcome!</string>
+    <string name="chave_api_google">AIzaSyCxpqBImz9IrgKN9w0HSA_U1K6Phl-OqY4</string>
+    <string name="label_coordenadas">Coordenadas aparecerão aqui</string>
+    <string name="coordinates_format">Latitude: %1$.6f, Longitude: %2$.6f</string>
 </resources>
