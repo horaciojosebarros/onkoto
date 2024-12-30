@@ -14,6 +14,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.StrictMode
+import android.widget.TextView
 
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
@@ -36,66 +37,40 @@ class MapsActivity : AppCompatActivity() , OnMapReadyCallback  {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Obter o fragmento do mapa
+
+        // Inicialize o binding
+        binding = ActivityMapsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // Configure o SupportMapFragment
         val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment?
+            .findFragmentById(R.id.map) as SupportMapFragment
+        mapFragment.getMapAsync(this)
 
-        // Verificar se o fragmento foi encontrado e configurar o callback
-        mapFragment?.getMapAsync(this)
-
-        // Inicializa o cliente de localização
+        // Inicialize o cliente de localização
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        enableEdgeToEdge()
-
-        setContentView(R.layout.activity_maps)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.editTextView)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-
-        val button: Button = findViewById(R.id.buttonSubmit)
-
-        button.setOnClickListener {
-            buttonAction()
-        }
-    }
-
-    private fun buttonAction() {
-        val loginEditText = findViewById<EditText>(R.id.editTextLogin).text.toString()
-        val nameEditText = findViewById<EditText>(R.id.editTextName).text.toString()
-
-        val userService = UserService()
-        val userDto = UserDto(id = "", login = loginEditText.toString(), name = nameEditText.toString())
-        Log.w("Name:",loginEditText.toString())
-        userService.sendUser(userDto)
-
-
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        // Solicitar localização atual
+        // Solicite a localização do usuário
         requestLocation()
     }
 
     private fun requestLocation() {
-        val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
         val permissionGranted = ActivityCompat.checkSelfPermission(
             this,
-            locationPermission
+            Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
-        if (!permissionGranted) {
-            requestPermissionLauncher.launch(locationPermission)
-        } else {
+        if (permissionGranted) {
+            mMap.isMyLocationEnabled = true
             fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-                location?.let {
-                    updateMapLocation(it)
-                }
+                location?.let { updateMapLocation(it) }
             }
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
@@ -111,8 +86,11 @@ class MapsActivity : AppCompatActivity() , OnMapReadyCallback  {
         mMap.addMarker(MarkerOptions().position(userLatLng).title("Localização Atual"))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 15f))
 
-        // Exibe as coordenadas
-        binding.coordinatesTextView.text = getString(R.string.coordinates_format, location.latitude, location.longitude)
-
+        // Atualize o TextView com as coordenadas
+        binding.coordinatesTextView.text = getString(
+            R.string.coordinates_format,
+            location.latitude,
+            location.longitude
+        )
     }
 }

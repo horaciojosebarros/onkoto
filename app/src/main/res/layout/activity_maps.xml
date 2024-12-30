@@ -17,30 +17,6 @@
         android:textSize="24sp"
         android:textStyle="bold" />
 
-    <EditText
-        android:id="@+id/editTextLogin"
-        android:layout_height="wrap_content"
-        android:hint="@string/label_login"
-        android:inputType="text"
-        android:scaleType="center"
-        android:maxLength="100"
-        android:layout_width="250dp"
-        android:autofillHints="Login"
-        android:minHeight="48dp"
-
-        />
-
-    <EditText
-        android:id="@+id/editTextName"
-        android:layout_width="250dp"
-        android:layout_height="wrap_content"
-        android:hint="@string/label_name"
-        android:inputType="text"
-        android:scaleType="center"
-        android:maxLength="100"
-        android:autofillHints="Name"
-        android:minHeight="48dp"
-        />
 
     <Button
         android:id="@+id/buttonSubmit"
@@ -52,13 +28,7 @@
         android:layout_marginBottom="16dp"
         />
 
-    <TextView
-        android:id="@+id/coordinatesTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/label_coordenadas"
-        android:textSize="16sp"
-        android:padding="16dp" />
+
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/map"
@@ -66,6 +36,12 @@
         android:layout_width="400dp"
         android:layout_height="300dp" />
 
+    <TextView
+        android:id="@+id/coordinatesTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:padding="16dp" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
