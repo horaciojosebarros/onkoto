@@ -1,26 +1,19 @@
 package com.example.onkoto
 
-import android.os.Bundle
-import android.util.Log
-import android.widget.Button
-import android.widget.EditText
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.example.onkoto.model.UserDto
-import com.example.onkoto.service.UserService
 import android.Manifest
+import android.app.AlertDialog
+import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
-import android.os.StrictMode
-import android.widget.TextView
-
+import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.example.onkoto.databinding.ActivityMapsBinding
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -28,33 +21,40 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
-/* root class */
-class MapsActivity : AppCompatActivity() , OnMapReadyCallback  {
+
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var binding: ActivityMapsBinding
     private lateinit var mMap: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var locationCallback: LocationCallback
+    private lateinit var locationRequest: com.google.android.gms.location.LocationRequest
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Inicialize o binding
+        checkAndRequestPermissions()
+
+        // Initialize binding
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Configure o SupportMapFragment
+        // Configure the SupportMapFragment
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        // Inicialize o cliente de localização
+        // Initialize location services
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+       startLocationUpdates()
+
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        // Solicite a localização do usuário
+        // Request location updates
         requestLocation()
     }
 
@@ -66,9 +66,7 @@ class MapsActivity : AppCompatActivity() , OnMapReadyCallback  {
 
         if (permissionGranted) {
             mMap.isMyLocationEnabled = true
-            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-                location?.let { updateMapLocation(it) }
-            }
+            startLocationUpdates()
         } else {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
@@ -81,16 +79,94 @@ class MapsActivity : AppCompatActivity() , OnMapReadyCallback  {
             }
         }
 
-    private fun updateMapLocation(location: Location) {
-        val userLatLng = LatLng(location.latitude, location.longitude)
-        mMap.addMarker(MarkerOptions().position(userLatLng).title("Localização Atual"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 15f))
+    private fun startLocationUpdates() {
+        this.locationRequest = com.google.android.gms.location.LocationRequest.Builder(
+            LocationRequest.PRIORITY_HIGH_ACCURACY, // Priority
+            10000 // Interval in milliseconds
+        ).apply {
+            setMinUpdateIntervalMillis(5000) // Fastest interval
+            setMaxUpdates(1) // Optional: Limit to one update
+        }.build()
 
-        // Atualize o TextView com as coordenadas
-        binding.coordinatesTextView.text = getString(
-            R.string.coordinates_format,
-            location.latitude,
-            location.longitude
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            Log.d("MapsActivity", "Permissions denied")
+            return
+        }
+        fusedLocationClient.requestLocationUpdates(
+            this.locationRequest,
+            object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult) {
+                    locationResult.locations.lastOrNull()?.let {
+                        updateMapLocation(it)
+                    }
+                }
+            },
+            mainLooper
         )
     }
+
+    private fun updateMapLocation(location: Location) {
+        val userLatLng = LatLng(location.latitude, location.longitude)
+        Log.d("MapsActivity", "Updating map with location: $userLatLng")
+
+        try {
+            mMap.addMarker(MarkerOptions().position(userLatLng).title("Current Location"))
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 15f))
+
+            // Update TextView with coordinates
+            binding.coordinatesTextView.text = getString(
+                R.string.coordinates_format,
+                location.latitude,
+                location.longitude
+            )
+        } catch (e: Exception) {
+            Log.e("MapsActivity", "Error updating map location", e)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        fusedLocationClient.removeLocationUpdates(locationCallback)
+    }
+
+    private fun checkAndRequestPermissions() {
+        val permissions = mutableListOf<String>()
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+
+        if (permissions.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, permissions.toTypedArray(), 1)
+        }
+    }
+
+
+
 }

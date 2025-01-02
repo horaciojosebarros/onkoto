@@ -2,7 +2,7 @@
     <string name="app_name">Onkoto</string>
     <string name="label_login">Login</string>
     <string name="label_name">Name</string>
-    <string name="label_send">Save</string>
+    <string name="label_send">Share</string>
     <string name="label_title">Welcome!</string>
     <string name="chave_api_google">AIzaSyCxpqBImz9IrgKN9w0HSA_U1K6Phl-OqY4</string>
     <string name="label_coordenadas">Coordenadas aparecerão aqui</string>
