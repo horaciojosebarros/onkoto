@@ -5,10 +5,13 @@ import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -47,7 +50,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         // Initialize location services
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-       startLocationUpdates()
+        startLocationUpdates()
+
 
     }
 
@@ -128,11 +132,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 15f))
 
             // Update TextView with coordinates
-            binding.coordinatesTextView.text = getString(
-                R.string.coordinates_format,
-                location.latitude,
-                location.longitude
-            )
+            binding.coordinatesTextView.text =
+                getCompleteAddress(location.latitude.toDouble(), location.longitude.toDouble())
+
         } catch (e: Exception) {
             Log.e("MapsActivity", "Error updating map location", e)
         }
@@ -165,6 +167,43 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         if (permissions.isNotEmpty()) {
             ActivityCompat.requestPermissions(this, permissions.toTypedArray(), 1)
         }
+    }
+
+    private fun shareOnWhatsApp(locationUrl: String) {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, "Minha localização atual: $locationUrl")
+            setPackage("com.whatsapp") // Garante que abrirá diretamente o WhatsApp
+        }
+
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, "O WhatsApp não está instalado.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun getCompleteAddress(latitude: Double, longitude: Double): String {
+        val geocoder = Geocoder(this)
+        val addressList: List<Address>?
+        val addressText = StringBuilder()
+
+        try {
+            addressList = geocoder.getFromLocation(latitude, longitude, 1)
+            if (!addressList.isNullOrEmpty()) {
+                val address = addressList[0]
+
+                // Append address lines
+                for (i in 0..address.maxAddressLineIndex) {
+                    addressText.append(address.getAddressLine(i)).append("\n")
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return "Address not available"
+        }
+
+        return addressText.toString()
     }
 
 
