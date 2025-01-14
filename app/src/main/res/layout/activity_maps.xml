@@ -6,16 +6,16 @@
     android:orientation="vertical"
     android:padding="16dp"
     tools:context=".MapsActivity" >
+    <ImageView
+        android:id="@+id/appIcon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/onkoto"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp" />
 
-    <TextView
-        android:id="@+id/textViewTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginBottom="24dp"
-        android:text="@string/label_title"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+
 
 
     <Button
